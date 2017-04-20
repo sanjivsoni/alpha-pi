@@ -2,6 +2,7 @@ import smbus
 import time
 import threading
 import os
+import sys
 
 ARDUINO_ADDRESS = 0x04
 ARDUINO_DATA_BYTES = 6
@@ -20,28 +21,33 @@ except Exception as e:
 
 def main():
     try:
-        drive('forward', 255, True)
-        delay(0.01)
-    except:
-        print("Exception in main", sys.exc_info()[0])
+        while(True):
+            drive('forward', 255, True)
+            time.sleep(0.01)
+            print 'forward'
+    except Exception as e:
+        print "Exception in main" + str(e)
+        shutdown()
+        raise
 
 
-def drive(command, speed = 127, dataLog = True)
+def drive(command, speed = 127, dataLog = True):
     if command == 'forward':
         writeMotorSpeed(speed, speed)
 
-def writeMotorSpeed(speedLeft, speedRight)
-       try:
+def writeMotorSpeed(speedLeft, speedRight):
+    try:
 	# 0 - Register to write to
-        arduinoBus.write_block_data(ARDUINO_ADDRESS, 0, [highByte(speedLeft), lowByte(speedLeft), highByte(speedRight), lowByte(speedRight)])
+        rpiBus.write_block_data(ARDUINO_ADDRESS, 0, [highByte(speedLeft), lowByte(speedLeft), highByte(speedRight), lowByte(speedRight)])
     except IOError:
-        writeMotorSpeeds(speedLeft, speedRight)
+        writeMotorSpeed(speedLeft, speedRight)
     except Exception as e:
         print "Exception in writeMotorSpeed " + str(e)
         shutdown() 
 
 def shutdown():
     print "Shutting Down"
-    writeMotorSpeeds(0, 0)
+    writeMotorSpeed(0, 0)
     sys.exit(0)
 
+main()
