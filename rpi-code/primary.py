@@ -22,7 +22,8 @@ def main():
     try:
         drive('forward', 255, True)
         delay(0.01)
-    except 
+    except:
+        print("Exception in main", sys.exc_info()[0])
 
 
 def drive(command, speed = 127, dataLog = True)
