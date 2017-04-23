@@ -9,7 +9,7 @@ import sys
 # configuration variables
 ARDUINO_ADDRESS             = 0x04  # i2c address for arduino
 ARDUINO_DATA_COUNT          = 5    # no of sensors on arduino
-SENSOR_TILE_DATA_COUNT      = 0
+SENSOR_TILE_DATA_COUNT      = 24
 DATA_READ_INTERVAL          = 100    # milliseconds
 AUTOPILOT_UPDATE_INTERVAL   = 100    # milliseconds
 MAX_SPEED                   = 255
@@ -50,7 +50,7 @@ def main():
 
         dataReadFlag = False
 
-        drive('autopilot-sonar', 255, False)
+        drive('autopilot-sonar', 155, False)
         while True:
             time.sleep(0.01)
 
@@ -145,7 +145,7 @@ def readSensorData():
                 
                 sensorData[0] = currentTime
                 arduinoDataHandler()
-                #sensorTileDataHandler()
+                sensorTileDataHandler()
                 print sensorData
 
                 sensorDataReady = True
@@ -161,10 +161,10 @@ def checkObstacle(obstacleArray=[]):
     
     obstacleFlag = False
     obstacleSum = 0
-    for sensorIndex in range(1, 6):
+    for sensorIndex in range(1, 4):
         obstacleArray.append(sensorData[sensorIndex]) 
         if sensorData[sensorIndex] > 0 and sensorData[sensorIndex] < 10:
-            obstacleSum += (sensorIndex - 3)
+            obstacleSum += (sensorIndex - 2)
             obstacleFlag = True
 
 
@@ -239,23 +239,19 @@ def autopilot(type='sonar', speed=255):
 
     nextAutopilotUpdateTime = getTimestamp()
 
-    if type == 'sonar-yaw':
-        robotPID = PID.PID(YAW_P, YAW_I, YAW_D)
-        robotPID.setPoint=0.0
-        robotPID.setSampleTime(AUTOPILOT_UPDATE_INTERVAL/1000.0)
-
     while True:
         if autopilotFlag:
             currentTime = getTimestamp()
             if currentTime >= nextAutopilotUpdateTime:
                 nextAutopilotUpdateTime += AUTOPILOT_UPDATE_INTERVAL/1000.0
+                print 'here'
 
                 while not sensorDataReady:
                     pass
-
                 
                 if type == 'sonar':
                     writeMotorSpeeds(speed, speed)
+
                     '''
                     obstacle = checkObstacle()
 
@@ -268,37 +264,8 @@ def autopilot(type='sonar', speed=255):
                         writeMotorSpeeds(-speed, speed)
                         time.sleep(.500)
                     '''
-                    pass
-
-                elif type == 'sonar-yaw':
-                    '''
-                    obstacleArray = []
-                    obstacle = checkObstacle(obstacleArray)
-
-                    feedback = sensorData[YAW_INDEX] - robotPID.setPoint
-
-                    if feedback < -180.0:
-                        feedback += 360
-                    elif feedback > 180:
-                        feedback -= 360
-
-                    robotPID.update(feedback)
-
-                    pidOutput = robotPID.output
-
-                    if pidOutput < 0:
-                        writeMotorSpeeds(MAX_SPEED, MAX_SPEED + pidOutput)
-                    else:
-                        writeMotorSpeeds(MAX_SPEED - pidOutput, MAX_SPEED)
-                    '''
-                    pass
-
         else:
             return
-
-
-    if type == 'sonar-yaw':
-        pass
 
 def shutdown():
     print "Shutting Down"
