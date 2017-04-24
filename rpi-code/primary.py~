@@ -25,7 +25,7 @@ TURN_ANGLE                  = 45
 OBSTACLE_DISTANCE           = 15
 MAX_DISTANCE_DIFF           = 25
 VERBOSE_DATA_REPORTING      = True
-DATA_SOURCE                 = 'sonar'       # sonar or encoders
+DATA_SOURCE                 = 'encoders'       # sonar or encoders
 
 arduinoBus = smbus.SMBus(1)
 try:
@@ -40,6 +40,12 @@ dataLogFlag = False
 autopilotFlag = False
 initialtime = 0
 sensorDataQueue = Queue()
+
+x_old = 0.0
+y_old = 0.0
+dist_per_tick = 0.0366519
+Dw = 9.2
+theta_old = 0
 
 prevX = prevY = None
 turningFlag = False
@@ -138,7 +144,45 @@ def sensorTileDataHandler():
         sensorTileDataHandler()
 
 def processFromEncoders(): 
-    pass 
+    global x_old,y_old,theta_old
+    global dist_per_tick
+    global theta_old
+
+    Dw = 9.2
+    
+    if abs(sensorData[SONAR_NUM + 1]) > 500:
+        return 
+
+    encoderLeft = sensorData[SONAR_NUM + 1]
+    encoderRight = sensorData[SONAR_NUM + 2]
+
+    Dl = encoderLeft * dist_per_tick;
+    Dr = encoderRight * dist_per_tick;
+    Dc = (Dl + Dr)/2.0;
+    #print "EncL = %f, EncR = %f, Dc = %f, Dl = %f, Dr = %f"%(sensorData[SONAR_NUM + 1], sensorData[SONAR_NUM + 2], Dc, Dl, Dr)
+    #print "Encoder Left %f , Encoder Right %f"%(encoderLeft, encoderRight)
+
+    theta_inst = (Dr - Dl)/Dw;
+    
+    theta_new = theta_old + (Dr - Dl)/Dw;
+    x_new = x_old + Dc*math.cos(theta_new);
+    y_new = y_old + Dc*math.sin(theta_new);
+    
+    #wall1_x = x_new + us1*math.cos(theta_inst)
+    #wall1_y = y_new + us1*math.sin(theta_inst)
+
+    wall2_x = x_new + sensorData[2]*math.cos(theta_inst)
+    wall2_x = x_new + sensorData[2]*math.cos(theta_inst)
+
+    #wall3_y = y_new + us3*math.sin(theta_inst)
+    #wall3_y = y_new + us3*math.sin(theta_inst)
+    
+    x_old = x_new;
+    y_old = y_new;
+    old_theta = theta_new;
+    print x_new, y_new
+
+    sensorData[-2] = [(x_new, y_new)]
 
 def processFromSonar():
     pass
