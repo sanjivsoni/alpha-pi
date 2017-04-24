@@ -10,20 +10,21 @@
 #define MAX_DISTANCE    200     // maximum distance (in cm) to ping
 #define PING_INTERVAL   35      // milliseconds between sensor pings
 
-#define SONAR_LEFT_TRIG         A2
-#define SONAR_LEFT_ECHO         A3
+#define SONAR_LEFT_TRIG         10
+#define SONAR_LEFT_ECHO         11
 
 #define SONAR_CENTRE_TRIG       A0
 #define SONAR_CENTRE_ECHO       A1
 
-#define SONAR_RIGHT_TRIG        5
-#define SONAR_RIGHT_ECHO        4
+#define SONAR_RIGHT_TRIG        A2
+#define SONAR_RIGHT_ECHO        A3
 
+#define ENCODER_NUM 2
 /* Motors --------------------------------------------------------------------*/
-#define LEFT_MOTOR_A    9
-#define LEFT_MOTOR_B    10
-#define RIGHT_MOTOR_A   11
-#define RIGHT_MOTOR_B   12
+#define LEFT_MOTOR_A    5
+#define LEFT_MOTOR_B    4
+#define RIGHT_MOTOR_A   6
+#define RIGHT_MOTOR_B   7
 
 /* General -------------------------------------------------------------------*/
 #define MAX_SPEED   255
