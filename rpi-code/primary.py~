@@ -13,7 +13,7 @@ ARDUINO_ADDRESS             = 0x04  # i2c address for arduino
 ARDUINO_DATA_COUNT          = 5    # no of sensors on arduino
 SONAR_NUM                   = 3
 SENSOR_TILE_DATA_COUNT      = 24
-DATA_READ_INTERVAL          = 10    # milliseconds
+DATA_READ_INTERVAL          = 30    # milliseconds
 PID_UPDATE_INTERVAL         = 50
 YAW_P                       = 1.5
 YAW_I                       = 0.0
@@ -77,9 +77,11 @@ def main():
             print "Exception in dataReadThread " + str(e)
             shutdown()
 
+        '''
         drive('autopilot-sonar', 80, False)
         while True:
             time.sleep(0.01)
+        '''
 
     except KeyboardInterrupt:
         shutdown()
@@ -177,12 +179,22 @@ def processFromEncoders():
     #wall3_y = y_new + us3*math.sin(theta_inst)
     #wall3_y = y_new + us3*math.sin(theta_inst)
     
-    x_old = x_new;
-    y_old = y_new;
-    old_theta = theta_new;
-    print x_new, y_new
 
-    sensorData[-2] = [(x_new, y_new)]
+    if abs(x_old - x_new) > 10 or abs(y_old - y_new) > 10:
+        return False
+
+    if x_new != x_old or y_new != y_old:
+        sensorData[-2] = [(x_new, y_new)]
+        #print sensorData
+        x_old = x_new;
+        y_old = y_new;
+        theta_old = theta_new;
+        return True
+    else:
+        x_old = x_new;
+        y_old = y_new;
+        theta_old = theta_new;
+        return False
 
 def processFromSonar():
     pass
@@ -191,7 +203,7 @@ def dataProcessor():
     if DATA_SOURCE == 'sonar':
         processFromSonar()
     elif DATA_SOURCE == 'encoders':
-        processFromEncoders()
+        return processFromEncoders()
 
 def readSensorData():
     global sensorData
@@ -217,8 +229,8 @@ def readSensorData():
                     #print sensorData
                     
                     if VERBOSE_DATA_REPORTING:
-                        dataProcessor()
-                        sensorDataQueue.put(sensorData)
+                        if dataProcessor():
+                            sensorDataQueue.put(sensorData)
 
                     sensorDataReady = True
 

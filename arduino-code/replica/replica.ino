@@ -2,6 +2,7 @@
 #include <Motor.h>
 #include <NewPing.h>
 #include "config.h"
+#include <Encoder.h>
 
 #define HIGHBYTE(word) (word >> 8)
 #define LOWBYTE(word) (word & 0x00FF)
@@ -9,12 +10,19 @@
 int speedLeft = 0;
 int speedRight = 0;
 unsigned int cmd;
+int newLeft, newRight;
+int positionLeft = -999, positionRight = -999;
+int encoderLeft = 0, encoderRight = 0;
+
+
+Encoder knobLeft(3, 9);
+Encoder knobRight(2, 8);
 
 motor motorLeft, motorRight;
 
 unsigned long pingTimer[SONAR_NUM];     // when each pings
 unsigned int sonarData[SONAR_NUM];      // where the ping distances are stored
-uint8_t sensorDataInBytes[(SONAR_NUM) * 2];
+uint8_t sensorDataInBytes[(SONAR_NUM + ENCODER_NUM) * 2];
 uint8_t currentSensor = 0; // Which sensor is active.
 
 NewPing sonar[SONAR_NUM] = {        // sensor object array
@@ -83,12 +91,24 @@ void echoCheck() // If ping echo, set distance to array.
 }
 
 void oneSensorCycle() // split all sonar data into bytes
-{ 
+{   
+    newLeft = knobLeft.read();
+    newRight = knobRight.read();
+    if ((newLeft != positionLeft || newRight != positionRight)) {
+      
+      encoderLeft += (newLeft - positionLeft);
+      encoderRight += (newRight - positionRight);
+
+      positionLeft = newLeft;
+      positionRight = newRight; 
+    }
+    
     for (uint8_t sensorIndex = 0; sensorIndex < SONAR_NUM; sensorIndex++)
     {
         sensorDataInBytes[sensorIndex*2 + 0] = HIGHBYTE(sonarData[sensorIndex]);
         sensorDataInBytes[sensorIndex*2 + 1] = LOWBYTE(sonarData[sensorIndex]);
     }
+  
 }
 
 // callback for received data
@@ -110,13 +130,23 @@ void receiveData(int byteCount)
                     speedRight = getWord(Wire.read(), Wire.read());
 
                     motorLeft.write(speedLeft);
-                    motorRight.write(speedRight);
-
+                    if(speedRight == 0)
+                    {
+                      motorRight.write(0);
+                    }
+                    else if(speedRight > 0)
+                    {
+                      motorRight.write(speedRight + 30);
+                    }
+                    else if(speedRight < 0)
+                    {
+                      motorRight.write(speedRight - 30);
+                    }
                     #ifdef SERIAL_DEBUGGING
                     
                     Serial.print(speedLeft);
                     Serial.print(" ");
-                    Serial.println(speedRight);
+                    Serial.println(speedRight + 30);
                     
                     #endif
                 }
@@ -133,10 +163,27 @@ void receiveData(int byteCount)
     }
 }
 
+void fetchEncoderValues()
+{
+    sensorDataInBytes[SONAR_NUM*2 + 0] = HIGHBYTE(encoderLeft);
+    sensorDataInBytes[SONAR_NUM*2 + 1] = LOWBYTE(encoderLeft);
+    
+    sensorDataInBytes[SONAR_NUM*2 + 2] = HIGHBYTE(encoderRight);
+    sensorDataInBytes[SONAR_NUM*2 + 3] = LOWBYTE(encoderRight);
+    
+    encoderLeft = 0;
+    encoderRight = 0;
+
+    //knobLeft.write(0);
+    //knobRight.write(0);
+
+}
 // callback for sending data
 void sendData()
 {
-    Wire.write(sensorDataInBytes, (SONAR_NUM)*2);
+    fetchEncoderValues();
+    Wire.write(sensorDataInBytes, (SONAR_NUM + ENCODER_NUM)*2);
 }
+
 
 

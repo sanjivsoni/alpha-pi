@@ -1,4 +1,4 @@
-import lambdamaster as lm
+import primary as lm
 import time
 #import lambdaMasterEMU as lm
 import socket
@@ -31,7 +31,7 @@ def main():
          
         try:
             print "Driving"
-            lm.drive("autopilot-sonar",255,False)
+            lm.drive("autopilot-sonar",80,False)
             #dataThread = Thread(target=lm.getData)
             #dataThread.setDaemon(True)
             #dataThread.start()
@@ -57,6 +57,7 @@ def main():
                 sys.exit(0)
     
     except KeyboardInterrupt:
+        s.close()
         lm.drive('halt')
         
 
@@ -90,7 +91,7 @@ def clientThread(conn):
                 data = '@'+str(lm.sensorDataQueue.get())+'@'
                 conn.send(data);
                 time.sleep(frequency)
-                print data
+                #print data
 
         elif str(initCharacter)=="c":
             print "Sending Continuous Data"
@@ -99,7 +100,7 @@ def clientThread(conn):
                     time.sleep(0.05)
                 
                 data = '@'+str(lm.sensorDataQueue.get())+'@'
-                print data
+                #print data
                 conn.send(data)
                 time.sleep(0.05)
         else:
