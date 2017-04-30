@@ -161,8 +161,6 @@ def processFromEncoders():
     Dl = encoderLeft * dist_per_tick;
     Dr = encoderRight * dist_per_tick;
     Dc = (Dl + Dr)/2.0;
-    #print "EncL = %f, EncR = %f, Dc = %f, Dl = %f, Dr = %f"%(sensorData[SONAR_NUM + 1], sensorData[SONAR_NUM + 2], Dc, Dl, Dr)
-    #print "Encoder Left %f , Encoder Right %f"%(encoderLeft, encoderRight)
 
     theta_inst = (Dr - Dl)/Dw;
     
@@ -170,15 +168,8 @@ def processFromEncoders():
     x_new = x_old + Dc*math.cos(theta_new);
     y_new = y_old + Dc*math.sin(theta_new);
     
-    #wall1_x = x_new + us1*math.cos(theta_inst)
-    #wall1_y = y_new + us1*math.sin(theta_inst)
-
     wall2_x = x_new + sensorData[2]*math.cos(theta_inst)
     wall2_x = x_new + sensorData[2]*math.cos(theta_inst)
-
-    #wall3_y = y_new + us3*math.sin(theta_inst)
-    #wall3_y = y_new + us3*math.sin(theta_inst)
-    
 
     if abs(x_old - x_new) > 10 or abs(y_old - y_new) > 10:
         return False
@@ -370,7 +361,6 @@ def autopilot(type='sonar', speed=255):
                 sensorDataQueue.put(sensorData)
 
             if type == 'sonar':
-                # Test
                 writeMotorSpeeds(speed, speed)
 
                 obstacle = checkObstacle(sensorData)
@@ -378,43 +368,15 @@ def autopilot(type='sonar', speed=255):
                 if obstacle == 100:     # no obstacle
 
                     writeMotorSpeeds(speed, speed)
-                    #time.sleep(0.215)
-                    #writeMotorSpeeds(0, 0)
                     time.sleep(0.005)
 
                 elif obstacle < 0:      # obstacle towards left
                     print 'obstacle left'
                     afterObstacleEvent(obstacle, speed, lock)
                     
-                elif obstacle >= 0:
+                elif obstacle >= 0: # Obstacle towards right
                     print 'obstacle right'
                     afterObstacleEvent(obstacle, speed, lock)
-
-
-                '''
-                    turnFlag = True
-                    writeMotorSpeeds(speed, -speed)
-                    
-                    #lock.acquire()
-                    #dataProcessor()
-                    #lock.release()
-                    
-                    time.sleep(.700)
-                    writeMotorSpeeds(0, 0)
-                    turnFlag = False
-                elif obstacle >= 0:     # obstacle towards right or in front
-                    turnFlag = True
-                    
-                    #lock.acquire()
-                    #dataProcessor()
-                    #lock.release()
-                    
-                    writeMotorSpeeds(-speed, speed)
-                    time.sleep(.700)
-                    writeMotorSpeeds(0, 0)
-                    turnFlag = False
-                '''
-
         else:
             writeMotorSpeeds(0, 0)
             print "Autopilot Stopped"

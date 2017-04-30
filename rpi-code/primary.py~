@@ -245,7 +245,6 @@ def writeMotorSpeeds(speedLeft, speedRight):
     try:
         arduinoBus.write_block_data(ARDUINO_ADDRESS, 0, [highByte(int(speedLeft)), lowByte(int(speedLeft)), highByte(int(speedRight)), lowByte(int(speedRight))])
 
-
     except IOError:
         writeMotorSpeeds(speedLeft, speedRight)
     except Exception as e:
